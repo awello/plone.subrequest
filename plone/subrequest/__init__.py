@@ -1,7 +1,12 @@
 import re
 
 from Acquisition import aq_base
-from ZPublisher.BaseRequest import RequestContainer
+try:
+    from ZPublisher.BaseRequest import RequestContainer
+except ImportError:
+    _ZOPE4 = True
+else:
+    _ZOPE4 = False
 from ZPublisher.Publish import dont_publish_class
 from ZPublisher.Publish import missing_name
 from ZPublisher.mapply import mapply
@@ -96,8 +101,11 @@ def subrequest(url, root=None, stdout=None):
     alsoProvides(request, ISubRequest)
     try:
         setRequest(request)
-        request_container = RequestContainer(REQUEST=request)
-        app = aq_base(parent_app).__of__(request_container)
+        if _ZOPE4:
+            app = parent_app
+        else:
+            request_container = RequestContainer(REQUEST=request)
+            app = aq_base(parent_app).__of__(request_container)
         request['PARENTS'] = [app]
         response = request.response
         response.__class__ = SubResponse
